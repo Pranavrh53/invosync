@@ -35,6 +35,17 @@ export const getInvoice = asyncHandler(async (req: Request, res: Response) => {
 });
 
 /**
+ * Get invoice by share token (Public)
+ * GET /invoices/public/:token
+ */
+export const getInvoiceByToken = asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.params;
+    const invoice = await invoiceService.getInvoiceByShareToken(token);
+
+    sendSuccess(res, 'Invoice retrieved successfully', invoice);
+});
+
+/**
  * Get all invoices with pagination and filtering
  * GET /invoices?page=1&limit=10&status=draft&clientId=xxx
  */

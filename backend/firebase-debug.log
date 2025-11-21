@@ -1,29 +1,36 @@
-[debug] [2025-11-21T18:59:12.424Z] ----------------------------------------------------------------------
-[debug] [2025-11-21T18:59:12.426Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\HP\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start --only firestore
-[debug] [2025-11-21T18:59:12.427Z] CLI Version:   14.26.0
-[debug] [2025-11-21T18:59:12.427Z] Platform:      win32
-[debug] [2025-11-21T18:59:12.427Z] Node Version:  v22.15.0
-[debug] [2025-11-21T18:59:12.427Z] Time:          Sat Nov 22 2025 00:29:12 GMT+0530 (India Standard Time)
-[debug] [2025-11-21T18:59:12.427Z] ----------------------------------------------------------------------
+[debug] [2025-11-21T20:37:27.048Z] ----------------------------------------------------------------------
+[debug] [2025-11-21T20:37:27.050Z] Command:       C:\nvm4w\nodejs\node.exe C:\Users\froze\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init emulators
+[debug] [2025-11-21T20:37:27.051Z] CLI Version:   14.26.0
+[debug] [2025-11-21T20:37:27.051Z] Platform:      win32
+[debug] [2025-11-21T20:37:27.051Z] Node Version:  v20.19.5
+[debug] [2025-11-21T20:37:27.051Z] Time:          Sat Nov 22 2025 02:07:27 GMT+0530 (India Standard Time)
+[debug] [2025-11-21T20:37:27.051Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2025-11-21T18:59:12.671Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2025-11-21T18:59:12.671Z] > authorizing via signed-in user (rvit23bis124.rvitm@rvei.edu.in)
-[debug] [2025-11-21T18:59:12.786Z] java version "22.0.2" 2024-07-16
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
 
-[debug] [2025-11-21T18:59:12.786Z] Java(TM) SE Runtime Environment (build 22.0.2+9-70)
-Java HotSpot(TM) 64-Bit Server VM (build 22.0.2+9-70, mixed mode, sharing)
+You're about to initialize a Firebase project in this directory:
 
-[debug] [2025-11-21T18:59:12.813Z] Parsed Java major version: 22
-[info] i  emulators: Starting emulators: firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: firestore"}}
-[debug] [2025-11-21T18:59:12.820Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2025-11-21T18:59:12.820Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
-[warn] !  hub: emulator hub unable to start on port 4400, starting on 4402 instead. {"metadata":{"emulator":{"name":"hub"},"message":"emulator hub unable to start on port 4400, starting on 4402 instead."}}
-[warn] !  logging: Logging Emulator unable to start on port 4500, starting on 4503 instead. {"metadata":{"emulator":{"name":"logging"},"message":"Logging Emulator unable to start on port 4500, starting on 4503 instead."}}
-[debug] [2025-11-21T18:59:12.823Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2025-11-21T18:59:12.824Z] assigned listening specs for emulators {"user":{"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"hub":[{"address":"127.0.0.1","family":"IPv4","port":4402},{"address":"::1","family":"IPv6","port":4402}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4503}]},"metadata":{"message":"assigned listening specs for emulators"}}
-[debug] [2025-11-21T18:59:12.828Z] Emulator locator file path: C:\Users\HP\AppData\Local\Temp\hub-invosync-e8e8b.json
-[debug] [2025-11-21T18:59:12.828Z] [hub] writing locator at C:\Users\HP\AppData\Local\Temp\hub-invosync-e8e8b.json
-[debug] [2025-11-21T18:59:12.839Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
-[debug] [2025-11-21T18:59:12.839Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
-[debug] [2025-11-21T18:59:12.840Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","C:\\Users\\HP\\.cache\\firebase\\emulators\\cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","invosync-e8e8b","--rules","G:\\Hackathon\\invosync\\backend\\firestore.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"C:\\\\Users\\\\HP\\\\.cache\\\\firebase\\\\emulators\\\\cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"invosync-e8e8b\",\"--rules\",\"G:\\\\Hackathon\\\\invosync\\\\backend\\\\firestore.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
-[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+  D:\invosync\backend
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[debug] [2025-11-21T20:38:53.974Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (C:\Users\froze\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\@inquirer\core\dist\commonjs\lib\create-prompt.js:101:37)
+    at Interface.emit (node:events:524:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1128:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:267:20)
+    at ReadStream.emit (node:events:536:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:371:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.

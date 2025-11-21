@@ -3,17 +3,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useInvoices } from "../hooks/useInvoices";
+import { useInvoices, useInvoice } from "../hooks/useInvoices";
 import { useClients } from "../hooks/useClients";
 import { useItemsStore } from "../store/itemsStore";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/Table";
-import { Trash2, Plus, Save, ArrowLeft, FileText } from "lucide-react";
+import { Trash2, Plus, Save, ArrowLeft, FileText, Share2 } from "lucide-react";
 import { formatCurrency } from "../utils/formatters";
 import { generateInvoicePDF } from "../utils/pdfGenerator";
 import toast from "react-hot-toast";
+
+// ... (imports)
 
 const invoiceSchema = z.object({
     clientId: z.string().min(1, "Client is required"),
@@ -35,6 +37,7 @@ export default function InvoiceBuilder() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { createInvoice, updateInvoice } = useInvoices();
+    const { data: existingInvoice } = useInvoice(id || "");
     const { clients } = useClients();
     const { items: libraryItems } = useItemsStore();
 
@@ -43,7 +46,6 @@ export default function InvoiceBuilder() {
         control,
         handleSubmit,
         watch,
-        setValue,
         formState: { errors, isSubmitting },
     } = useForm<InvoiceFormData>({
         resolver: zodResolver(invoiceSchema) as any,
@@ -64,11 +66,11 @@ export default function InvoiceBuilder() {
     const [totals, setTotals] = useState({ subtotal: 0, totalGST: 0, total: 0 });
 
     useEffect(() => {
-        const subtotal = watchItems.reduce((acc, item) => {
+        const subtotal = watchItems.reduce((acc: number, item: any) => {
             return acc + (Number(item.quantity) * Number(item.unitPrice));
         }, 0);
 
-        const totalGST = watchItems.reduce((acc, item) => {
+        const totalGST = watchItems.reduce((acc: number, item: any) => {
             const amount = Number(item.quantity) * Number(item.unitPrice);
             return acc + (amount * (Number(item.taxRate) / 100));
         }, 0);
@@ -97,10 +99,12 @@ export default function InvoiceBuilder() {
         try {
             if (id) {
                 await updateInvoice.mutateAsync({ id, data });
+                // Don't navigate away, just stay on page so user can share
             } else {
-                await createInvoice.mutateAsync(data);
+                const newInvoice = await createInvoice.mutateAsync(data);
+                // Navigate to the edit page of the new invoice
+                navigate(`/invoices/${newInvoice.id}`, { replace: true });
             }
-            navigate("/invoices");
         } catch (error) {
             console.error(error);
         }
@@ -119,6 +123,16 @@ export default function InvoiceBuilder() {
         generateInvoicePDF(invoiceData);
     };
 
+    const handleShareLink = () => {
+        if (!existingInvoice?.shareToken) {
+            toast.error("Save the invoice first to generate a link");
+            return;
+        }
+        const link = `${window.location.origin}/view/${existingInvoice.shareToken}`;
+        navigator.clipboard.writeText(link);
+        toast.success("Link copied to clipboard!");
+    };
+
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-20">
             <div className="flex items-center justify-between">
@@ -133,10 +147,19 @@ export default function InvoiceBuilder() {
                         <p className="text-muted-foreground">Create a new invoice for your client.</p>
                     </div>
                 </div>
-                <Button variant="outline" onClick={handleDownloadPDF} type="button">
-                    <FileText className="mr-2 h-4 w-4" /> Download PDF
-                </Button>
+                <div className="flex gap-2">
+                    {id && (
+                        <Button variant="outline" onClick={handleShareLink} type="button">
+                            <Share2 className="mr-2 h-4 w-4" /> Share Link
+                        </Button>
+                    )}
+                    <Button variant="outline" onClick={handleDownloadPDF} type="button">
+                        <FileText className="mr-2 h-4 w-4" /> Download PDF
+                    </Button>
+                </div>
             </div>
+
+            {/* ... rest of the form */}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -335,7 +358,7 @@ export default function InvoiceBuilder() {
                         Cancel
                     </Button>
                     <Button type="submit" isLoading={isSubmitting}>
-                        <Save className="mr-2 h-4 w-4" /> Save Invoice
+                        <Save className="mr-2 h-4 w-4" /> Save
                     </Button>
                 </div>
             </form>

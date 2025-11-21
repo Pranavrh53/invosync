@@ -1,11 +1,16 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Package, Settings as SettingsIcon, Menu } from "lucide-react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, FileText, Users, Package, Settings as SettingsIcon, Menu, LogOut } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../utils/cn";
+import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 export default function Layout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { currentUser, logout } = useAuth();
 
     const navItems = [
         { name: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -14,6 +19,24 @@ export default function Layout() {
         { name: "Items", path: "/items", icon: Package },
         { name: "Settings", path: "/settings", icon: SettingsIcon },
     ];
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            toast.success("Logged out successfully");
+            navigate("/login");
+        } catch (error) {
+            console.error("Logout error:", error);
+            toast.error("Failed to logout");
+        }
+    };
+
+    const getUserInitial = () => {
+        if (currentUser?.email) {
+            return currentUser.email.charAt(0).toUpperCase();
+        }
+        return "U";
+    };
 
     return (
         <div className="flex h-screen bg-muted/20">
@@ -69,11 +92,44 @@ export default function Layout() {
                         <Menu className="w-6 h-6" />
                     </button>
 
-                    <div className="flex items-center gap-4 ml-auto">
-                        {/* Add user profile or other header items here */}
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm">
-                            A
-                        </div>
+                    <div className="flex items-center gap-4 ml-auto relative">
+                        <button
+                            onClick={() => setShowUserMenu(!showUserMenu)}
+                            className="flex items-center gap-3 hover:bg-muted px-3 py-2 rounded-lg transition-colors"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+                                {getUserInitial()}
+                            </div>
+                            <span className="text-sm font-medium hidden sm:block">
+                                {currentUser?.email}
+                            </span>
+                        </button>
+
+                        {showUserMenu && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => setShowUserMenu(false)}
+                                />
+                                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border z-50 py-2">
+                                    <div className="px-4 py-2 border-b">
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {currentUser?.displayName || "User"}
+                                        </p>
+                                        <p className="text-xs text-gray-500 truncate">
+                                            {currentUser?.email}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        Logout
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </header>
 

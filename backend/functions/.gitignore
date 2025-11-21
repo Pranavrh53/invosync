@@ -21,6 +21,7 @@ dist/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+serviceAccountKey.json
 
 # Backups
 backups/

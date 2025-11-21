@@ -31,6 +31,7 @@ export interface Invoice {
     issueDate: string;
     dueDate: string;
     notes?: string;
+    shareToken?: string;
     createdAt?: string;
 }
 
@@ -58,8 +59,9 @@ export function useInvoices(params?: any) {
     const updateInvoice = useMutation({
         mutationFn: ({ id, data }: { id: string; data: any }) =>
             invoiceApi.update(id, data),
-        onSuccess: () => {
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["invoices"] });
+            queryClient.invalidateQueries({ queryKey: ["invoice", variables.id] });
             queryClient.invalidateQueries({ queryKey: ["invoiceStats"] });
             toast.success("Invoice updated successfully");
         },
@@ -88,6 +90,18 @@ export function useInvoices(params?: any) {
         createInvoice,
         updateInvoice,
         deleteInvoice,
+        updateInvoiceStatus: useMutation({
+            mutationFn: ({ id, status }: { id: string; status: string }) =>
+                invoiceApi.updateStatus(id, status),
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["invoices"] });
+                queryClient.invalidateQueries({ queryKey: ["invoiceStats"] });
+                toast.success("Invoice status updated");
+            },
+            onError: (error: any) => {
+                toast.error(error.response?.data?.message || "Failed to update status");
+            },
+        }),
     };
 }
 

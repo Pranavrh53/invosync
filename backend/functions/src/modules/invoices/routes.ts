@@ -8,7 +8,8 @@ import {
     updateInvoiceStatus,
     getInvoicesByClient,
     getInvoiceStats,
-    getRevenueByMonth
+    getRevenueByMonth,
+    getInvoiceByToken
 } from './controller';
 
 /**
@@ -21,6 +22,7 @@ const router = Router();
 router.post('/', createInvoice);
 router.get('/stats/summary', getInvoiceStats); // Must be before /:id to avoid conflict
 router.get('/stats/revenue-by-month', getRevenueByMonth); // Must be before /:id to avoid conflict
+router.get('/public/:token', getInvoiceByToken); // Public route
 router.get('/client/:clientId', getInvoicesByClient);
 router.get('/:id', getInvoice);
 router.get('/', getAllInvoices);

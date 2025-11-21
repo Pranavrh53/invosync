@@ -30,6 +30,11 @@ export const invoiceApi = {
         return response.data.data;
     },
 
+    getByToken: async (token: string) => {
+        const response = await api.get(`/invoices/public/${token}`);
+        return response.data.data;
+    },
+
     create: async (data: any) => {
         const response = await api.post('/invoices', data);
         return response.data.data;
@@ -43,5 +48,10 @@ export const invoiceApi = {
     delete: async (id: string) => {
         const response = await api.delete(`/invoices/${id}`);
         return response.data;
+    },
+
+    updateStatus: async (id: string, status: string) => {
+        const response = await api.patch(`/invoices/${id}/status`, { status });
+        return response.data.data;
     },
 };

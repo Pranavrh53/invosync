@@ -66,6 +66,7 @@ export interface Invoice {
     issueDate: Date;
     dueDate: Date;
     notes?: string;
+    shareToken?: string;
     createdAt?: Date;
     updatedAt?: Date;
 }

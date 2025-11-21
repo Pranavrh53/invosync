@@ -44,7 +44,8 @@ export const generateInvoicePDF = (invoice: any) => {
     const finalY = (doc as any).lastAutoTable.finalY || 65;
 
     doc.text(`Subtotal: ${formatCurrency(invoice.subtotal || 0)}`, 140, finalY + 10);
-    doc.text(`Total GST: ${formatCurrency(invoice.gstBreakdown?.totalGST || 0)}`, 140, finalY + 15);
+    const gstTotal = invoice.gstBreakdown?.total ?? invoice.gstBreakdown?.totalGST ?? 0;
+    doc.text(`Total GST: ${formatCurrency(gstTotal)}`, 140, finalY + 15);
     doc.setFontSize(12);
     doc.text(`Total: ${formatCurrency(invoice.total || 0)}`, 140, finalY + 22);
 

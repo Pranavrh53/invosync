@@ -205,6 +205,7 @@ export class InvoiceModel {
             issueDate: this.toDate(data.issueDate) || new Date(),
             dueDate: this.toDate(data.dueDate) || new Date(),
             notes: data.notes,
+            shareToken: data.shareToken,
             createdAt: this.toDate(data.createdAt),
             updatedAt: this.toDate(data.updatedAt)
         };
@@ -227,6 +228,7 @@ export class InvoiceModel {
         if (invoice.issueDate) data.issueDate = invoice.issueDate;
         if (invoice.dueDate) data.dueDate = invoice.dueDate;
         if (invoice.notes !== undefined) data.notes = invoice.notes;
+        if (invoice.shareToken) data.shareToken = invoice.shareToken;
 
         return data;
     }

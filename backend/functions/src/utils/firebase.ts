@@ -1,4 +1,6 @@
 import * as admin from 'firebase-admin';
+import * as path from 'path';
+import * as fs from 'fs';
 
 /**
  * Initialize Firebase Admin SDK
@@ -7,21 +9,38 @@ import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin (only once)
 if (!admin.apps.length) {
-    // For local development, set the project ID
-    const projectId = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || 'invosync-e8e8b';
+    const projectId = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || 'invosync-ac500';
 
     try {
-        admin.initializeApp({
-            projectId: projectId
-        });
-
-        // Use Firestore emulator if FIRESTORE_EMULATOR_HOST is set
+        // Check if we're using the emulator
         if (process.env.FIRESTORE_EMULATOR_HOST) {
             console.log(`🔧 Using Firestore Emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
+            admin.initializeApp({
+                projectId: projectId
+            });
         } else {
-            console.log(`🔥 Using Firebase Project: ${projectId}`);
-            console.log(`⚠️  Note: For production use, ensure proper credentials are configured`);
+            // Try to use service account file for production
+            const serviceAccountPath = path.join(__dirname, '..', '..', 'serviceAccountKey.json');
+
+            if (fs.existsSync(serviceAccountPath)) {
+                console.log('🔐 Using Service Account credentials');
+                const serviceAccount = require(serviceAccountPath);
+                admin.initializeApp({
+                    credential: admin.credential.cert(serviceAccount),
+                    projectId: projectId
+                });
+            } else {
+                // Fallback to environment variables
+                console.log('⚠️  No service account file found, using default credentials');
+                console.log('⚠️  Note: This may not work for local development');
+                admin.initializeApp({
+                    projectId: projectId
+                });
+            }
         }
+
+        console.log(`🔥 Using Firebase Project: ${projectId}`);
+        console.log(`⚠️  Note: For production use, ensure proper credentials are configured`);
     } catch (error) {
         console.error('❌ Firebase initialization error:', error);
         throw error;

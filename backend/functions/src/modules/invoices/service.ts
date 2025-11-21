@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { db, COLLECTIONS, serverTimestamp } from '../../utils/firebase';
 import { Invoice, CreateInvoiceDTO, UpdateInvoiceDTO, InvoiceStatus } from '../../types';
 import { InvoiceModel } from './model';
@@ -31,6 +32,9 @@ export class InvoiceService {
         // Generate invoice number
         const invoiceNumber = InvoiceModel.generateInvoiceNumber();
 
+        // Generate share token
+        const shareToken = crypto.randomBytes(16).toString('hex');
+
         // Prepare invoice data
         const invoiceData = {
             invoiceNumber,
@@ -44,6 +48,7 @@ export class InvoiceService {
             issueDate: new Date(data.issueDate),
             dueDate: new Date(data.dueDate),
             notes: data.notes || '',
+            shareToken,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         };
@@ -52,6 +57,23 @@ export class InvoiceService {
         const docRef = await this.collection.add(invoiceData);
         const doc = await docRef.get();
 
+        return InvoiceModel.fromFirestore(doc.id, doc.data());
+    }
+
+    /**
+     * Get invoice by share token
+     */
+    async getInvoiceByShareToken(token: string): Promise<Invoice> {
+        const snapshot = await this.collection
+            .where('shareToken', '==', token)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) {
+            throw ErrorFactory.notFound('Invoice', 'token');
+        }
+
+        const doc = snapshot.docs[0];
         return InvoiceModel.fromFirestore(doc.id, doc.data());
     }
 
@@ -132,7 +154,13 @@ export class InvoiceService {
             throw ErrorFactory.notFound('Invoice', id);
         }
 
+        const currentData = doc.data();
         const updateData: any = {};
+
+        // Ensure shareToken exists
+        if (!currentData?.shareToken) {
+            updateData.shareToken = crypto.randomBytes(16).toString('hex');
+        }
 
         // If client is being updated, verify it exists
         if (data.clientId) {
