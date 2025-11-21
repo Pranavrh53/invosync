@@ -7,7 +7,8 @@ import {
     deleteInvoice,
     updateInvoiceStatus,
     getInvoicesByClient,
-    getInvoiceStats
+    getInvoiceStats,
+    getRevenueByMonth
 } from './controller';
 
 /**
@@ -19,6 +20,7 @@ const router = Router();
 // Invoice CRUD operations
 router.post('/', createInvoice);
 router.get('/stats/summary', getInvoiceStats); // Must be before /:id to avoid conflict
+router.get('/stats/revenue-by-month', getRevenueByMonth); // Must be before /:id to avoid conflict
 router.get('/client/:clientId', getInvoicesByClient);
 router.get('/:id', getInvoice);
 router.get('/', getAllInvoices);

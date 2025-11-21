@@ -113,3 +113,13 @@ export const getInvoiceStats = asyncHandler(async (req: Request, res: Response) 
 
     sendSuccess(res, 'Invoice statistics retrieved successfully', stats);
 });
+
+/**
+ * Get revenue by month
+ * GET /invoices/stats/revenue-by-month
+ */
+export const getRevenueByMonth = asyncHandler(async (req: Request, res: Response) => {
+    const revenueData = await invoiceService.getRevenueByMonth();
+
+    sendSuccess(res, 'Revenue data retrieved successfully', revenueData);
+});

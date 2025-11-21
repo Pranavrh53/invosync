@@ -1,4 +1,4 @@
-import { db, COLLECTIONS, serverTimestamp } from '../../firebase';
+import { db, COLLECTIONS, serverTimestamp } from '../../utils/firebase';
 import { Invoice, CreateInvoiceDTO, UpdateInvoiceDTO, InvoiceStatus } from '../../types';
 import { InvoiceModel } from './model';
 import { ClientService } from '../clients/service';
@@ -41,8 +41,8 @@ export class InvoiceService {
             gstBreakdown,
             total,
             status: data.status || InvoiceStatus.DRAFT,
-            issueDate: data.issueDate,
-            dueDate: data.dueDate,
+            issueDate: new Date(data.issueDate),
+            dueDate: new Date(data.dueDate),
             notes: data.notes || '',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
@@ -89,19 +89,29 @@ export class InvoiceService {
             query = query.where('clientId', '==', clientId);
         }
 
-        // Get total count
+        // Get all matching documents first
         const snapshot = await query.get();
         const total = snapshot.size;
 
-        // Get paginated results
-        const querySnapshot = await query
-            .orderBy('createdAt', 'desc')
-            .limit(limit)
-            .offset(offset)
-            .get();
+        // Convert to array and sort in memory to avoid index requirements
+        let allDocs = snapshot.docs.map((doc: any) => ({
+            id: doc.id,
+            data: doc.data()
+        }));
 
-        const invoices = querySnapshot.docs.map((doc: any) =>
-            InvoiceModel.fromFirestore(doc.id, doc.data())
+        // Sort by createdAt in descending order (newest first)
+        allDocs.sort((a: any, b: any) => {
+            const aTime = a.data.createdAt?.toMillis?.() || 0;
+            const bTime = b.data.createdAt?.toMillis?.() || 0;
+            return bTime - aTime;
+        });
+
+        // Apply pagination
+        const paginatedDocs = allDocs.slice(offset, offset + limit);
+
+        // Convert to Invoice objects
+        const invoices = paginatedDocs.map((doc: any) =>
+            InvoiceModel.fromFirestore(doc.id, doc.data)
         );
 
         return { invoices, total };
@@ -146,8 +156,8 @@ export class InvoiceService {
 
         // Update other fields
         if (data.status) updateData.status = data.status;
-        if (data.issueDate) updateData.issueDate = data.issueDate;
-        if (data.dueDate) updateData.dueDate = data.dueDate;
+        if (data.issueDate) updateData.issueDate = new Date(data.issueDate);
+        if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
         if (data.notes !== undefined) updateData.notes = data.notes;
 
         updateData.updatedAt = serverTimestamp();
@@ -245,5 +255,44 @@ export class InvoiceService {
         stats.pendingAmount = Math.round(stats.pendingAmount * 100) / 100;
 
         return stats;
+    }
+
+    /**
+     * Get revenue by month for the last 12 months
+     */
+    async getRevenueByMonth(): Promise<Array<{ month: string; revenue: number }>> {
+        const snapshot = await this.collection.get();
+        const invoices = snapshot.docs.map((doc: any) => InvoiceModel.fromFirestore(doc.id, doc.data()));
+
+        // Get current date and calculate 12 months ago
+        const now = new Date();
+        const monthsData: { [key: string]: number } = {};
+
+        // Initialize last 12 months with 0 revenue
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            monthsData[monthKey] = 0;
+        }
+
+        // Aggregate revenue by month (only for paid invoices)
+        invoices.forEach((invoice: Invoice) => {
+            if (invoice.status === InvoiceStatus.PAID && invoice.issueDate) {
+                const issueDate = new Date(invoice.issueDate);
+                const monthKey = `${issueDate.getFullYear()}-${String(issueDate.getMonth() + 1).padStart(2, '0')}`;
+
+                if (monthsData.hasOwnProperty(monthKey)) {
+                    monthsData[monthKey] += invoice.total;
+                }
+            }
+        });
+
+        // Convert to array format expected by frontend
+        const result = Object.entries(monthsData).map(([month, revenue]) => ({
+            month,
+            revenue: Math.round(revenue * 100) / 100
+        }));
+
+        return result;
     }
 }

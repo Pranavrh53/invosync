@@ -60,10 +60,13 @@ export default function Dashboard() {
         },
     ];
 
-    const formattedRevenueData = revenueData.map((item) => ({
-        label: item.month.substring(0, 3),
-        value: item.revenue,
-    }));
+    const formattedRevenueData = revenueData.map((item) => {
+        const date = new Date(item.month);
+        return {
+            label: date.toLocaleString('default', { month: 'short', year: '2-digit' }),
+            value: item.revenue,
+        };
+    });
 
     if (isStatsLoading || isClientsLoading || isRevenueLoading) {
         return (

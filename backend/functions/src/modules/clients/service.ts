@@ -1,4 +1,4 @@
-import { db, COLLECTIONS, serverTimestamp } from '../../firebase';
+import { db, COLLECTIONS, serverTimestamp } from '../../utils/firebase';
 import { Client, CreateClientDTO, UpdateClientDTO } from '../../types';
 import { ClientModel } from './model';
 import { ErrorFactory } from '../../utils/errorHandler';
@@ -57,19 +57,29 @@ export class ClientService {
     async getAllClients(page: number = 1, limit: number = 10): Promise<{ clients: Client[], total: number }> {
         const offset = (page - 1) * limit;
 
-        // Get total count
+        // Get all documents
         const snapshot = await this.collection.get();
         const total = snapshot.size;
 
-        // Get paginated results
-        const querySnapshot = await this.collection
-            .orderBy('createdAt', 'desc')
-            .limit(limit)
-            .offset(offset)
-            .get();
+        // Convert to array and sort in memory
+        let allDocs = snapshot.docs.map((doc: any) => ({
+            id: doc.id,
+            data: doc.data()
+        }));
 
-        const clients = querySnapshot.docs.map((doc: any) =>
-            ClientModel.fromFirestore(doc.id, doc.data())
+        // Sort by createdAt in descending order (newest first)
+        allDocs.sort((a: any, b: any) => {
+            const aTime = a.data.createdAt?.toMillis?.() || 0;
+            const bTime = b.data.createdAt?.toMillis?.() || 0;
+            return bTime - aTime;
+        });
+
+        // Apply pagination
+        const paginatedDocs = allDocs.slice(offset, offset + limit);
+
+        // Convert to Client objects
+        const clients = paginatedDocs.map((doc: any) =>
+            ClientModel.fromFirestore(doc.id, doc.data)
         );
 
         return { clients, total };

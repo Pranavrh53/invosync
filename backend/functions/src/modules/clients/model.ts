@@ -111,6 +111,17 @@ export class ClientModel {
     }
 
     /**
+     * Helper to safely convert Firestore timestamps/strings to Date
+     */
+    private static toDate(val: any): Date | undefined {
+        if (!val) return undefined;
+        if (val instanceof Date) return val;
+        if (typeof val.toDate === 'function') return val.toDate(); // Firestore Timestamp
+        if (typeof val === 'string') return new Date(val);
+        return undefined;
+    }
+
+    /**
      * Convert Firestore document to Client object
      */
     static fromFirestore(id: string, data: any): Client {
@@ -121,8 +132,8 @@ export class ClientModel {
             phone: data.phone,
             address: data.address,
             gstin: data.gstin,
-            createdAt: data.createdAt?.toDate(),
-            updatedAt: data.updatedAt?.toDate()
+            createdAt: this.toDate(data.createdAt),
+            updatedAt: this.toDate(data.updatedAt)
         };
     }
 

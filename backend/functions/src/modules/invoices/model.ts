@@ -178,6 +178,17 @@ export class InvoiceModel {
     }
 
     /**
+     * Helper to safely convert Firestore timestamps/strings to Date
+     */
+    private static toDate(val: any): Date | undefined {
+        if (!val) return undefined;
+        if (val instanceof Date) return val;
+        if (typeof val.toDate === 'function') return val.toDate(); // Firestore Timestamp
+        if (typeof val === 'string') return new Date(val);
+        return undefined;
+    }
+
+    /**
      * Convert Firestore document to Invoice object
      */
     static fromFirestore(id: string, data: any): Invoice {
@@ -191,11 +202,11 @@ export class InvoiceModel {
             gstBreakdown: data.gstBreakdown,
             total: data.total,
             status: data.status,
-            issueDate: data.issueDate?.toDate(),
-            dueDate: data.dueDate?.toDate(),
+            issueDate: this.toDate(data.issueDate) || new Date(),
+            dueDate: this.toDate(data.dueDate) || new Date(),
             notes: data.notes,
-            createdAt: data.createdAt?.toDate(),
-            updatedAt: data.updatedAt?.toDate()
+            createdAt: this.toDate(data.createdAt),
+            updatedAt: this.toDate(data.updatedAt)
         };
     }
 
