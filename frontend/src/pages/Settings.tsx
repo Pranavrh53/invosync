@@ -71,14 +71,34 @@ export default function Settings() {
                                 placeholder="e.g. Due on Receipt"
                             />
                         </div>
+                    </CardContent>
+                </Card>
 
-                        <div className="pt-4 flex justify-end">
-                            <Button type="submit">
-                                <Save className="mr-2 h-4 w-4" /> Save Changes
-                            </Button>
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle>Payment Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label="UPI ID"
+                                {...register("upiId")}
+                                placeholder="username@upi"
+                            />
+                            <Input
+                                label="Freelancer Name (for UPI)"
+                                {...register("freelancerName")}
+                                placeholder="Your Name"
+                            />
                         </div>
                     </CardContent>
                 </Card>
+
+                <div className="pt-4 flex justify-end">
+                    <Button type="submit">
+                        <Save className="mr-2 h-4 w-4" /> Save Changes
+                    </Button>
+                </div>
             </form>
         </div>
     );

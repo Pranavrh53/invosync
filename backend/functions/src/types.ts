@@ -53,6 +53,16 @@ export interface GSTBreakdown {
     total: number; // Total GST amount
 }
 
+export interface Payment {
+    id: string;
+    invoiceId: string;
+    amount: number;
+    date: Date;
+    mode: 'UPI' | 'Bank Transfer' | 'Cash' | 'Card' | 'Online' | 'Razorpay (Simulated)';
+    reference?: string;
+    status: 'completed' | 'pending';
+}
+
 export interface Invoice {
     id?: string;
     invoiceNumber: string;
@@ -66,7 +76,10 @@ export interface Invoice {
     issueDate: Date;
     dueDate: Date;
     notes?: string;
-    shareToken?: string;
+    payments?: Payment[];
+    balanceDue?: number;
+    paymentLink?: string;
+    paymentLinkId?: string; // Razorpay payment link ID
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -75,6 +88,7 @@ export enum InvoiceStatus {
     DRAFT = 'draft',
     SENT = 'sent',
     PAID = 'paid',
+    PARTIALLY_PAID = 'partially_paid',
     OVERDUE = 'overdue',
     CANCELLED = 'cancelled'
 }

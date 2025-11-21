@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "../utils/cn";
 import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
+import Chatbot from "./Chatbot";
 
 export default function Layout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -137,6 +138,7 @@ export default function Layout() {
                     <Outlet />
                 </main>
             </div>
+            <Chatbot />
         </div>
     );
 }

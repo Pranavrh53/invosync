@@ -6,10 +6,11 @@ import Invoices from "./pages/Invoices";
 import InvoiceBuilder from "./pages/InvoiceBuilder";
 import Clients from "./pages/Clients";
 import Items from "./pages/Items";
+import Estimates from "./pages/Estimates";
+import Reports from "./pages/Reports";
+import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import PublicInvoiceView from "./pages/PublicInvoiceView";
+import MockPaymentPage from "./pages/MockPaymentPage";
 
 export const router = createBrowserRouter([
     {
@@ -32,38 +33,20 @@ export const router = createBrowserRouter([
             </PrivateRoute>
         ),
         children: [
-            {
-                index: true,
-                element: <Dashboard />,
-            },
-            {
-                path: "invoices",
-                element: <Invoices />,
-            },
-            {
-                path: "invoices/new",
-                element: <InvoiceBuilder />,
-            },
-            {
-                path: "invoices/:id",
-                element: <InvoiceBuilder />,
-            },
-            {
-                path: "clients",
-                element: <Clients />,
-            },
-            {
-                path: "items",
-                element: <Items />,
-            },
-            {
-                path: "settings",
-                element: <Settings />,
-            },
+            { index: true, element: <Dashboard /> },
+            { path: "invoices", element: <Invoices /> },
+            { path: "invoices/new", element: <InvoiceBuilder /> },
+            { path: "invoices/:id", element: <InvoiceBuilder /> },
+            { path: "clients", element: <Clients /> },
+            { path: "items", element: <Items /> },
+            { path: "estimates", element: <Estimates /> },
+            { path: "reports", element: <Reports /> },
+            { path: "payments", element: <Payments /> },
+            { path: "settings", element: <Settings /> },
         ],
     },
     {
-        path: "*",
-        element: <Navigate to="/login" replace />,
+        path: "/pay/:invoiceId",
+        element: <MockPaymentPage />,
     },
 ]);

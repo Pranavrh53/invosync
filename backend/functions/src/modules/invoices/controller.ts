@@ -134,3 +134,49 @@ export const getRevenueByMonth = asyncHandler(async (req: Request, res: Response
 
     sendSuccess(res, 'Revenue data retrieved successfully', revenueData);
 });
+
+/**
+ * Check for overdue invoices
+ * POST /invoices/check-overdue
+ */
+export const checkOverdue = asyncHandler(async (req: Request, res: Response) => {
+    const result = await invoiceService.checkOverdueInvoices();
+    sendSuccess(res, 'Overdue check completed', result);
+});
+
+/**
+ * Add payment to invoice
+ * POST /invoices/:id/payments
+ */
+export const addPayment = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const paymentData = req.body;
+
+    const invoice = await invoiceService.addPayment(id, paymentData);
+
+    sendSuccess(res, 'Payment added successfully', invoice);
+});
+
+/**
+ * Generate payment link
+ * POST /invoices/:id/payment-link
+ */
+export const generatePaymentLink = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    const link = await invoiceService.generatePaymentLink(id);
+
+    sendSuccess(res, 'Payment link generated successfully', { link });
+});
+
+/**
+ * Simulate payment (testing)
+ * POST /invoices/:id/simulate-payment
+ */
+export const simulatePayment = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    const invoice = await invoiceService.simulatePayment(id);
+
+    sendSuccess(res, 'Payment simulated successfully', invoice);
+});

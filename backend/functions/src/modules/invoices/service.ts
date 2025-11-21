@@ -1,9 +1,10 @@
 import * as crypto from 'crypto';
 import { db, COLLECTIONS, serverTimestamp } from '../../utils/firebase';
-import { Invoice, CreateInvoiceDTO, UpdateInvoiceDTO, InvoiceStatus } from '../../types';
+import { Invoice, CreateInvoiceDTO, UpdateInvoiceDTO, InvoiceStatus, Payment } from '../../types';
 import { InvoiceModel } from './model';
 import { ClientService } from '../clients/service';
 import { ErrorFactory } from '../../utils/errorHandler';
+import Razorpay from 'razorpay';
 
 /**
  * Invoice service - Business logic layer for invoice operations
@@ -322,5 +323,204 @@ export class InvoiceService {
         }));
 
         return result;
+    }
+
+    /**
+     * Check for overdue invoices and apply penalties
+     */
+    async checkOverdueInvoices(): Promise<{ updated: number, notifications: number }> {
+        const result = await this.getAllInvoices(1, 1000); // Get all (up to 1000)
+        const invoices = result.invoices;
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+
+        let updatedCount = 0;
+        let notificationCount = 0;
+
+        for (const invoice of invoices) {
+            if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED) continue;
+
+            const dueDate = new Date(invoice.dueDate);
+            const dueDateZero = new Date(dueDate);
+            dueDateZero.setHours(0, 0, 0, 0);
+            const nowZero = new Date(now);
+            nowZero.setHours(0, 0, 0, 0);
+
+            // Check for Overdue
+            if (dueDateZero < nowZero && invoice.status !== InvoiceStatus.OVERDUE) {
+                // Mark as overdue
+                const updateData: any = { status: InvoiceStatus.OVERDUE };
+
+                // Add penalty if not present
+                const hasPenalty = invoice.items.some(item => item.description === 'Late Fee');
+                if (!hasPenalty) {
+                    const penaltyItem = {
+                        description: 'Late Fee',
+                        quantity: 1,
+                        unitPrice: 50, // Fixed penalty
+                        taxRate: 0,
+                        amount: 50
+                    };
+                    const newItems = [...invoice.items, penaltyItem];
+
+                    updateData.items = newItems;
+                }
+
+                await this.updateInvoice(invoice.id!, updateData);
+                updatedCount++;
+            }
+
+            // Check for Notification (Due Tomorrow)
+            if (dueDateZero.getTime() === tomorrow.getTime()) {
+                console.log(`[NOTIFICATION] Sending reminder for Invoice ${invoice.invoiceNumber} to client ${invoice.clientName || 'Unknown'}`);
+                notificationCount++;
+            }
+        }
+
+        return { updated: updatedCount, notifications: notificationCount };
+    }
+
+    /**
+     * Add a payment to an invoice
+     */
+    async addPayment(invoiceId: string, payment: Omit<Payment, 'id' | 'invoiceId' | 'status'>): Promise<Invoice> {
+        const docRef = this.collection.doc(invoiceId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            throw ErrorFactory.notFound('Invoice', invoiceId);
+        }
+
+        const invoice = InvoiceModel.fromFirestore(doc.id, doc.data());
+
+        const newPayment: Payment = {
+            id: Math.random().toString(36).substr(2, 9),
+            invoiceId,
+            ...payment,
+            status: 'completed'
+        };
+
+        const currentPayments = invoice.payments || [];
+        const updatedPayments = [...currentPayments, newPayment];
+
+        const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
+        const balanceDue = invoice.total - totalPaid;
+
+        let newStatus = invoice.status;
+        if (balanceDue <= 0) {
+            newStatus = InvoiceStatus.PAID;
+        } else if (totalPaid > 0) {
+            newStatus = InvoiceStatus.PARTIALLY_PAID;
+        }
+
+        await docRef.update({
+            payments: updatedPayments,
+            balanceDue,
+            status: newStatus,
+            updatedAt: serverTimestamp()
+        });
+
+        const updatedDoc = await docRef.get();
+        return InvoiceModel.fromFirestore(updatedDoc.id, updatedDoc.data());
+    }
+
+    /**
+     * Generate Razorpay Payment Link (Test/Sandbox Mode)
+     */
+    async generatePaymentLink(invoiceId: string): Promise<string> {
+        const invoice = await this.getInvoiceById(invoiceId);
+
+        // Fetch client details for better payment link
+        let clientEmail = "client@example.com";
+        let clientPhone = "9999999999";
+
+        try {
+            const client = await this.clientService.getClientById(invoice.clientId);
+            if (client.email) clientEmail = client.email;
+            if (client.phone) clientPhone = client.phone.replace(/[^0-9]/g, '').slice(-10); // Extract 10 digits
+        } catch (error) {
+            console.warn("Could not fetch client details for payment link");
+        }
+
+        // Check for Razorpay keys in environment
+        const key_id = process.env.RAZORPAY_KEY_ID;
+        const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+        if (key_id && key_secret) {
+            try {
+                // Initialize Razorpay instance (works in test mode with test keys)
+                const instance = new Razorpay({
+                    key_id,
+                    key_secret
+                });
+
+                // Create payment link with proper test mode configuration
+                const link = await instance.paymentLink.create({
+                    amount: Math.round((invoice.balanceDue || invoice.total) * 100), // Amount in paise
+                    currency: "INR",
+                    accept_partial: true,
+                    first_min_partial_amount: 100,
+                    description: `Payment for Invoice ${invoice.invoiceNumber}`,
+                    customer: {
+                        name: invoice.clientName || "Client",
+                        email: clientEmail,
+                        contact: clientPhone
+                    },
+                    notify: {
+                        sms: false, // Disable SMS in test mode
+                        email: false // Disable email in test mode
+                    },
+                    reminder_enable: false, // Disable reminders in test mode
+                    notes: {
+                        invoice_id: invoiceId,
+                        invoice_number: invoice.invoiceNumber,
+                        mode: 'test'
+                    },
+                    callback_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/invoices/${invoiceId}`,
+                    callback_method: 'get'
+                });
+
+                // Store the payment link in the invoice
+                await this.collection.doc(invoiceId).update({
+                    paymentLink: link.short_url,
+                    paymentLinkId: link.id,
+                    updatedAt: serverTimestamp()
+                });
+
+                console.log(`✅ Razorpay payment link generated: ${link.short_url}`);
+                return link.short_url;
+            } catch (error: any) {
+                console.error("❌ Razorpay Error:", error.error || error.message || error);
+                // Fall through to mock link on error
+            }
+        } else {
+            console.warn("⚠️ Razorpay keys not found. Using mock payment link.");
+        }
+
+        // Mock Link - Points to local payment simulation page
+        const mockLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/pay/${invoiceId}`;
+        await this.collection.doc(invoiceId).update({
+            paymentLink: mockLink,
+            updatedAt: serverTimestamp()
+        });
+        return mockLink;
+    }
+
+    /**
+     * Simulate a successful payment (for testing)
+     */
+    async simulatePayment(invoiceId: string): Promise<Invoice> {
+        const invoice = await this.getInvoiceById(invoiceId);
+        if (invoice.status === InvoiceStatus.PAID) return invoice;
+
+        const amountToPay = invoice.balanceDue ?? invoice.total;
+
+        return this.addPayment(invoiceId, {
+            amount: amountToPay,
+            date: new Date(),
+            mode: 'Razorpay (Simulated)'
+        });
     }
 }

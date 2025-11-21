@@ -10,10 +10,13 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/Table";
-import { Trash2, Plus, Save, ArrowLeft, FileText, Share2 } from "lucide-react";
+import { Trash2, Plus, Save, ArrowLeft, FileText, X } from "lucide-react";
 import { formatCurrency } from "../utils/formatters";
 import { generateInvoicePDF } from "../utils/pdfGenerator";
 import toast from "react-hot-toast";
+import { invoiceApi } from "../services/invoiceApi";
+import { usePreferencesStore } from "../store/userPreferences";
+import { QRCodeCanvas } from "qrcode.react";
 
 // ... (imports)
 
@@ -40,12 +43,20 @@ export default function InvoiceBuilder() {
     const { data: existingInvoice } = useInvoice(id || "");
     const { clients } = useClients();
     const { items: libraryItems } = useItemsStore();
+    const { preferences } = usePreferencesStore();
+
+    const [invoice, setInvoice] = useState<any>(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paymentAmount, setPaymentAmount] = useState("");
+    const [paymentMode, setPaymentMode] = useState("UPI");
 
     const {
         register,
         control,
         handleSubmit,
         watch,
+        setValue,
+        reset,
         formState: { errors, isSubmitting },
     } = useForm<InvoiceFormData>({
         resolver: zodResolver(invoiceSchema) as any,
@@ -66,7 +77,30 @@ export default function InvoiceBuilder() {
     const [totals, setTotals] = useState({ subtotal: 0, totalGST: 0, total: 0 });
 
     useEffect(() => {
-        const subtotal = watchItems.reduce((acc: number, item: any) => {
+        if (id) {
+            invoiceApi.getById(id).then(data => {
+                setInvoice(data);
+                reset({
+                    clientId: data.clientId,
+                    issueDate: new Date(data.issueDate).toISOString().split('T')[0],
+                    dueDate: new Date(data.dueDate).toISOString().split('T')[0],
+                    items: data.items,
+                    isInterState: false
+                });
+            }).catch(err => console.error(err));
+        }
+    }, [id, reset]);
+
+    useEffect(() => {
+        if (paymentTerms !== "custom" && issueDate) {
+            const date = new Date(issueDate);
+            date.setDate(date.getDate() + parseInt(paymentTerms));
+            setValue("dueDate", date.toISOString().split('T')[0]);
+        }
+    }, [paymentTerms, issueDate, setValue]);
+
+    useEffect(() => {
+        const subtotal = watchItems.reduce((acc, item) => {
             return acc + (Number(item.quantity) * Number(item.unitPrice));
         }, 0);
 
@@ -114,27 +148,59 @@ export default function InvoiceBuilder() {
         const data = watch();
         const invoiceData = {
             ...data,
-            invoiceNumber: "DRAFT", // Or actual number if editing
+            invoiceNumber: invoice?.invoiceNumber || "DRAFT",
             clientName: clients.find((c: any) => c.id === data.clientId)?.name,
             subtotal: totals.subtotal,
             gstBreakdown: { totalGST: totals.totalGST },
             total: totals.total,
+            paymentLink: invoice?.paymentLink,
+            upiId: preferences.upiId,
+            freelancerName: preferences.freelancerName
         };
         generateInvoicePDF(invoiceData);
     };
 
-    const handleShareLink = () => {
-        if (!existingInvoice?.shareToken) {
-            toast.error("Save the invoice first to generate a link");
-            return;
+    const handleGenerateLink = async () => {
+        if (!id) return;
+        try {
+            const res = await invoiceApi.generateLink(id);
+            setInvoice({ ...invoice, paymentLink: res.link });
+            toast.success("Payment link generated");
+        } catch (error) {
+            toast.error("Failed to generate link");
         }
-        const link = `${window.location.origin}/view/${existingInvoice.shareToken}`;
-        navigator.clipboard.writeText(link);
-        toast.success("Link copied to clipboard!");
+    };
+
+    const handleAddPayment = async () => {
+        if (!id || !paymentAmount) return;
+        try {
+            const updatedInvoice = await invoiceApi.addPayment(id, {
+                amount: parseFloat(paymentAmount),
+                date: new Date(),
+                mode: paymentMode
+            });
+            setInvoice(updatedInvoice);
+            setShowPaymentModal(false);
+            setPaymentAmount("");
+            toast.success("Payment recorded");
+        } catch (error) {
+            toast.error("Failed to add payment");
+        }
+    };
+
+    const handleSimulatePayment = async () => {
+        if (!id) return;
+        try {
+            const updatedInvoice = await invoiceApi.simulatePayment(id);
+            setInvoice(updatedInvoice);
+            toast.success("Payment simulated successfully");
+        } catch (error) {
+            toast.error("Failed to simulate payment");
+        }
     };
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto pb-20">
+        <div className="space-y-6 max-w-5xl mx-auto pb-20 relative">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => navigate("/invoices")}>
@@ -362,6 +428,128 @@ export default function InvoiceBuilder() {
                     </Button>
                 </div>
             </form>
+
+            {id && invoice && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Payment Options</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {preferences.upiId && (
+                                <div className="flex flex-col items-center p-4 border rounded-lg">
+                                    <QRCodeCanvas
+                                        value={`upi://pay?pa=${preferences.upiId}&pn=${preferences.freelancerName || 'Freelancer'}&am=${invoice.balanceDue ?? invoice.total}&cu=INR`}
+                                        size={150}
+                                    />
+                                    <p className="mt-2 text-sm font-medium">Scan to Pay via UPI</p>
+                                    <p className="text-xs text-muted-foreground">{preferences.upiId}</p>
+                                </div>
+                            )}
+
+                            <Button onClick={handleGenerateLink} className="w-full" variant="secondary">
+                                Generate Payment Link
+                            </Button>
+                            <Button onClick={handleSimulatePayment} className="w-full mt-2" variant="outline">
+                                Simulate Payment (Test)
+                            </Button>
+                            {invoice.paymentLink && (
+                                <div className="mt-2 p-2 bg-muted rounded text-center break-all">
+                                    <a href={invoice.paymentLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm">
+                                        {invoice.paymentLink}
+                                    </a>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Payment History</CardTitle>
+                            <Button size="sm" variant="outline" onClick={() => setShowPaymentModal(true)}>
+                                Record Payment
+                            </Button>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <div className="flex justify-between text-sm font-medium">
+                                    <span>Total Amount:</span>
+                                    <span>{formatCurrency(invoice.total)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm font-medium text-green-600">
+                                    <span>Paid Amount:</span>
+                                    <span>{formatCurrency(invoice.total - (invoice.balanceDue ?? invoice.total))}</span>
+                                </div>
+                                <div className="flex justify-between text-sm font-bold text-orange-600">
+                                    <span>Balance Due:</span>
+                                    <span>{formatCurrency(invoice.balanceDue ?? invoice.total)}</span>
+                                </div>
+
+                                <div className="border-t pt-4">
+                                    <h4 className="text-sm font-medium mb-2">Transactions</h4>
+                                    {invoice.payments && invoice.payments.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {invoice.payments.map((p: any) => (
+                                                <div key={p.id} className="flex justify-between text-sm p-2 bg-muted/50 rounded">
+                                                    <div>
+                                                        <p className="font-medium">{formatCurrency(p.amount)}</p>
+                                                        <p className="text-xs text-muted-foreground">{new Date(p.date).toLocaleDateString()} - {p.mode}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{p.status}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">No payments recorded.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {showPaymentModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <Card className="w-full max-w-md">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Record Payment</CardTitle>
+                            <Button variant="ghost" size="icon" onClick={() => setShowPaymentModal(false)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Amount</label>
+                                <Input
+                                    type="number"
+                                    value={paymentAmount}
+                                    onChange={(e) => setPaymentAmount(e.target.value)}
+                                    placeholder="Enter amount"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Payment Mode</label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={paymentMode}
+                                    onChange={(e) => setPaymentMode(e.target.value)}
+                                >
+                                    <option value="UPI">UPI</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card">Card</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end pt-4">
+                                <Button onClick={handleAddPayment}>Save Payment</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

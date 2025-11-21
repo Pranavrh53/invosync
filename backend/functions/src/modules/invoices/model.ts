@@ -205,7 +205,10 @@ export class InvoiceModel {
             issueDate: this.toDate(data.issueDate) || new Date(),
             dueDate: this.toDate(data.dueDate) || new Date(),
             notes: data.notes,
-            shareToken: data.shareToken,
+            payments: data.payments || [],
+            balanceDue: data.balanceDue !== undefined ? data.balanceDue : data.total,
+            paymentLink: data.paymentLink,
+            paymentLinkId: data.paymentLinkId,
             createdAt: this.toDate(data.createdAt),
             updatedAt: this.toDate(data.updatedAt)
         };
@@ -228,7 +231,9 @@ export class InvoiceModel {
         if (invoice.issueDate) data.issueDate = invoice.issueDate;
         if (invoice.dueDate) data.dueDate = invoice.dueDate;
         if (invoice.notes !== undefined) data.notes = invoice.notes;
-        if (invoice.shareToken) data.shareToken = invoice.shareToken;
+        if (invoice.payments) data.payments = invoice.payments;
+        if (invoice.balanceDue !== undefined) data.balanceDue = invoice.balanceDue;
+        if (invoice.paymentLink) data.paymentLink = invoice.paymentLink;
 
         return data;
     }

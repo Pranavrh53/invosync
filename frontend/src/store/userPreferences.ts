@@ -6,6 +6,8 @@ interface UserPreferences {
     invoicePrefix: string;
     defaultTaxRate: number;
     paymentTerms: string;
+    upiId?: string;
+    freelancerName?: string;
 }
 
 interface PreferencesState {
@@ -21,6 +23,8 @@ export const usePreferencesStore = create<PreferencesState>()(
                 invoicePrefix: 'INV-',
                 defaultTaxRate: 18,
                 paymentTerms: 'Due on Receipt',
+                upiId: '',
+                freelancerName: '',
             },
             updatePreferences: (settings) =>
                 set((state) => ({

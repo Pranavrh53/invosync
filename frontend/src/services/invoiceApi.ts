@@ -54,4 +54,19 @@ export const invoiceApi = {
         const response = await api.patch(`/invoices/${id}/status`, { status });
         return response.data.data;
     },
+
+    addPayment: async (id: string, data: any) => {
+        const response = await api.post(`/invoices/${id}/payments`, data);
+        return response.data.data;
+    },
+
+    generateLink: async (id: string) => {
+        const response = await api.post(`/invoices/${id}/payment-link`);
+        return response.data.data;
+    },
+
+    simulatePayment: async (id: string) => {
+        const response = await api.post(`/invoices/${id}/simulate-payment`);
+        return response.data.data;
+    },
 };

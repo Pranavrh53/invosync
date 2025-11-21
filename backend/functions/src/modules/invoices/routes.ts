@@ -1,33 +1,23 @@
 import { Router } from 'express';
-import {
-    createInvoice,
-    getInvoice,
-    getAllInvoices,
-    updateInvoice,
-    deleteInvoice,
-    updateInvoiceStatus,
-    getInvoicesByClient,
-    getInvoiceStats,
-    getRevenueByMonth,
-    getInvoiceByToken
-} from './controller';
-
-/**
- * Invoice routes
- */
+import * as invoiceController from './controller';
 
 const router = Router();
 
 // Invoice CRUD operations
-router.post('/', createInvoice);
-router.get('/stats/summary', getInvoiceStats); // Must be before /:id to avoid conflict
-router.get('/stats/revenue-by-month', getRevenueByMonth); // Must be before /:id to avoid conflict
-router.get('/public/:token', getInvoiceByToken); // Public route
-router.get('/client/:clientId', getInvoicesByClient);
-router.get('/:id', getInvoice);
-router.get('/', getAllInvoices);
-router.put('/:id', updateInvoice);
-router.patch('/:id/status', updateInvoiceStatus);
-router.delete('/:id', deleteInvoice);
+router.post('/', invoiceController.createInvoice);
+router.get('/stats/summary', invoiceController.getInvoiceStats); // Must be before /:id
+router.get('/stats/revenue-by-month', invoiceController.getRevenueByMonth); // Must be before /:id
+router.post('/check-overdue', invoiceController.checkOverdue);
+router.get('/client/:clientId', invoiceController.getInvoicesByClient);
+router.get('/:id', invoiceController.getInvoice);
+router.get('/', invoiceController.getAllInvoices);
+router.put('/:id', invoiceController.updateInvoice);
+router.patch('/:id/status', invoiceController.updateInvoiceStatus);
+router.delete('/:id', invoiceController.deleteInvoice);
+
+// Payments
+router.post('/:id/payments', invoiceController.addPayment);
+router.post('/:id/payment-link', invoiceController.generatePaymentLink);
+router.post('/:id/simulate-payment', invoiceController.simulatePayment);
 
 export default router;
