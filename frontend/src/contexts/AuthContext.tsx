@@ -6,7 +6,9 @@ import {
     signOut,
     onAuthStateChanged,
     GoogleAuthProvider,
+    GithubAuthProvider,
     signInWithPopup,
+    signInWithPhoneNumber,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -18,6 +20,8 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     loginWithGoogle: () => Promise<void>;
+    loginWithGithub: () => Promise<void>;
+    loginWithPhone: (phoneNumber: string, appVerifier: any) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,6 +59,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await signInWithPopup(auth, provider);
     };
 
+    const loginWithGithub = async () => {
+        const provider = new GithubAuthProvider();
+        await signInWithPopup(auth, provider);
+    };
+
+    const loginWithPhone = async (phoneNumber: string, appVerifier: any) => {
+        return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    };
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
@@ -71,6 +84,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         login,
         logout,
         loginWithGoogle,
+        loginWithGithub,
+        loginWithPhone,
     };
 
     return (

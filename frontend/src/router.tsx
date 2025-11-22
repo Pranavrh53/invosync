@@ -14,6 +14,7 @@ import MockPaymentPage from "./pages/MockPaymentPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import PublicInvoiceView from "./pages/PublicInvoiceView";
+import DocumentIntelligence from "./pages/DocumentIntelligence";
 
 export const router = createBrowserRouter([
     {
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
             { path: "invoices/:id", element: <InvoiceBuilder /> },
             { path: "clients", element: <Clients /> },
             { path: "items", element: <Items /> },
+            { path: "document-intelligence", element: <DocumentIntelligence /> },
             { path: "estimates", element: <Estimates /> },
             { path: "reports", element: <Reports /> },
             { path: "payments", element: <Payments /> },

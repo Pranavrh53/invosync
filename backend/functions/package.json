@@ -27,7 +27,7 @@
     "devDependencies": {
         "@types/cors": "^2.8.15",
         "@types/express": "^4.17.20",
-        "@types/node": "^20.9.0",
+        "@types/node": "^20.19.25",
         "firebase-functions-test": "^3.1.0",
         "typescript": "^5.2.2"
     },
