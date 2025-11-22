@@ -661,31 +661,6 @@ service cloud.firestore {
   }
 }
 ```
-
----
-
-## 📸 Screenshots
-
-### Dashboard
-![Dashboard](docs/screenshots/dashboard.png)
-*Real-time analytics and overview of your business*
-
-### Invoice Builder
-![Invoice Builder](docs/screenshots/invoice-builder.png)
-*Intuitive drag-and-drop invoice creation*
-
-### AI Document Intelligence
-![AI Document Intelligence](docs/screenshots/ai-docs.png)
-*Extract invoice data from documents with AI*
-
-### Client Management
-![Client Management](docs/screenshots/clients.png)
-*Comprehensive client database*
-
-### PDF Export
-![PDF Export](docs/screenshots/pdf-export.png)
-*Professional invoices with payment links*
-
 ---
 
 ## 🤝 Contributing
