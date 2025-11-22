@@ -61,7 +61,9 @@ export default function Dashboard() {
     ];
 
     const formattedRevenueData = revenueData.map((item) => {
-        const date = new Date(item.month);
+        // item.month is in format "YYYY-MM" (e.g., "2025-01")
+        const [year, month] = item.month.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
         return {
             label: date.toLocaleString('default', { month: 'short', year: '2-digit' }),
             value: item.revenue,
