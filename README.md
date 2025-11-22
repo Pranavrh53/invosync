@@ -1,25 +1,13 @@
-# InvoSync
+<div align="center">
+  <h1>InvoSync</h1>
+  <p>A modern, full-stack invoice and client management system built with React, Node.js, and Firebase.</p>
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+  [![GitHub stars](https://img.shields.io/github/stars/yourusername/invosync?style=social)](https://github.com/yourusername/invosync/stargazers)
+</div>
 
-A modern, full-stack invoice and client management system built with React, Node.js, and Firebase.
-
-## ✨ Features
-
-- **🤖 AI-Powered Invoicing**: Generate invoices from natural language prompts ("Create invoice for website design...").
-- **🔮 Predictive Analytics**: Forecast future cash flow and revenue trends.
-- **📄 Document Intelligence**: Extract data from uploaded invoices automatically.
-- **📊 Dashboard**: Real-time revenue tracking, payment heatmaps, and client insights.
-- **📝 Invoice Management**: Create, edit, and track invoices with ease.
-- **👥 Client Management**: Manage client details and payment history.
-- **📱 Responsive Design**: Works seamlessly on desktop and mobile.
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v18 or higher)
-- npm
-- A Firebase project (free)
-
-### Installation
+## 🚀 Quick Start
 
 1. **Clone the repository**
    ```bash
@@ -29,31 +17,21 @@ A modern, full-stack invoice and client management system built with React, Node
 
 2. **Install Dependencies**
    ```bash
-   # Install backend dependencies
+   # Backend
    cd backend/functions
    npm install
-
-   # Install frontend dependencies
+   
+   # Frontend
    cd ../../frontend
    npm install
    ```
 
-### 🔐 Configuration (Important!)
+3. **Set up Firebase**
+   - Create a project at [Firebase Console](https://console.firebase.google.com/)
+   - Enable Authentication, Firestore, Storage, and Hosting
+   - Download your service account key and save as `serviceAccountKey.json` in the backend directory
 
-To run the backend locally, you need to authenticate with Firebase. You have two options:
-
-#### Option 1: Use Your Own Firebase Project (Recommended)
-1. Create a project at [console.firebase.google.com](https://console.firebase.google.com)
-2. Go to Project Settings > Service Accounts
-3. Click "Generate new private key"
-4. Create a `.env` file in `backend/functions/` based on `.env.example`
-5. Add your credentials:
-   ```env
-   FIREBASE_PROJECT_ID=your-project-id
-   FIREBASE_CLIENT_EMAIL=your-email@...
-   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
-   ```
-
+4. **Configure Environment**
 #### Option 2: Use Service Account File
 If you have a `serviceAccountKey.json` file, place it in `backend/` (root of backend folder).
 
