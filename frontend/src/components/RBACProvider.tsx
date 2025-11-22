@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, type ReactNode } from "react";
 
 export type UserRole = "admin" | "accountant" | "sales" | "viewer";
 

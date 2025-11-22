@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useInvoices, useInvoice } from "../hooks/useInvoices";
+import { useInvoices } from "../hooks/useInvoices";
 import { useClients } from "../hooks/useClients";
 import { useItemsStore } from "../store/itemsStore";
 import { Button } from "../components/ui/Button";
@@ -40,7 +40,6 @@ export default function InvoiceBuilder() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { createInvoice, updateInvoice } = useInvoices();
-    const { data: existingInvoice } = useInvoice(id || "");
     const { clients } = useClients();
     const { items: libraryItems } = useItemsStore();
     const { preferences } = usePreferencesStore();
@@ -55,7 +54,6 @@ export default function InvoiceBuilder() {
         control,
         handleSubmit,
         watch,
-        setValue,
         reset,
         formState: { errors, isSubmitting },
     } = useForm<InvoiceFormData>({
@@ -91,13 +89,7 @@ export default function InvoiceBuilder() {
         }
     }, [id, reset]);
 
-    useEffect(() => {
-        if (paymentTerms !== "custom" && issueDate) {
-            const date = new Date(issueDate);
-            date.setDate(date.getDate() + parseInt(paymentTerms));
-            setValue("dueDate", date.toISOString().split('T')[0]);
-        }
-    }, [paymentTerms, issueDate, setValue]);
+
 
     useEffect(() => {
         const subtotal = watchItems.reduce((acc, item) => {
@@ -214,11 +206,7 @@ export default function InvoiceBuilder() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    {id && (
-                        <Button variant="outline" onClick={handleShareLink} type="button">
-                            <Share2 className="mr-2 h-4 w-4" /> Share Link
-                        </Button>
-                    )}
+
                     <Button variant="outline" onClick={handleDownloadPDF} type="button">
                         <FileText className="mr-2 h-4 w-4" /> Download PDF
                     </Button>

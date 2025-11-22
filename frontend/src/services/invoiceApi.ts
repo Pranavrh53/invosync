@@ -69,4 +69,9 @@ export const invoiceApi = {
         const response = await api.post(`/invoices/${id}/simulate-payment`);
         return response.data.data;
     },
+
+    getPayments: async () => {
+        const response = await api.get('/payments');
+        return response.data.data || [];
+    },
 };

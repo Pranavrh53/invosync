@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +11,9 @@ import Reports from "./pages/Reports";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import MockPaymentPage from "./pages/MockPaymentPage";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import PublicInvoiceView from "./pages/PublicInvoiceView";
 
 export const router = createBrowserRouter([
     {

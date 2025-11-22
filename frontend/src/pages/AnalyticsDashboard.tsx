@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
-import { RevenueChart } from "../components/analytics/RevenueChart";
-import { TopClientsTable } from "../components/analytics/TopClientsTable";
+// import { RevenueChart } from "../components/analytics/RevenueChart";
+// import { TopClientsTable } from "../components/analytics/TopClientsTable";
 import { formatCurrency } from "../utils/formatters";
 import { useQuery } from "@tanstack/react-query";
 import { invoiceApi } from "../services/invoiceApi";
@@ -8,7 +8,7 @@ import { invoiceApi } from "../services/invoiceApi";
 export default function AnalyticsDashboard() {
     // Fetch stats and revenue data (placeholder endpoints)
     const { data: stats } = useQuery({ queryKey: ["invoiceStats"], queryFn: () => invoiceApi.getStats() });
-    const { data: revenue } = useQuery({ queryKey: ["revenueByMonth"], queryFn: () => invoiceApi.getRevenueByMonth() });
+    // const { data: revenue } = useQuery({ queryKey: ["revenueByMonth"], queryFn: () => invoiceApi.getRevenueByMonth() });
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto py-8">
@@ -23,8 +23,8 @@ export default function AnalyticsDashboard() {
                     <CardContent>{stats?.byStatus?.paid ?? "-"}</CardContent>
                 </Card>
             </div>
-            <RevenueChart data={revenue ?? []} />
-            <TopClientsTable />
+            {/* <RevenueChart data={revenue ?? []} /> */}
+            {/* <TopClientsTable /> */}
         </div>
     );
 }
